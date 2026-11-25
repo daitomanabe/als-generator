@@ -5,7 +5,7 @@ Audio clips are in `audio-clips.md`, stock devices in `native-devices.md`, plugi
 
 ## File format
 
-- `.als` = gzip( XML ). Compatible with Ableton Live 12. Most generated sets were written with `MinorVersion="12.0_12300"` (Live's bundled sets use `12.0_12402`; embedding 12402 .adv presets into a 12300 set opened fine).
+- `.als` = gzip( XML ). Compatible with Ableton Live 12. Most generated sets were written with `MinorVersion="12.0_12300"` (Live's bundled sets use `12.0_12402`. `12.0_12300` = documents of Live 12.3.x, `12.0_12402` = Live 12.4.x. A 12402 .adv preset embedded in a 12300 set opens only when the device's class exists at 12300; a class that entered with 12.4, such as `Erosion2`, gives `Unknown class`: see `native-devices.md`, "Versions and classes").
 - Dependencies: the Python 3 standard library only (gzip, wave, zlib, xml). The output is an `.als` file plus a project folder.
 - Always gzip the final XML and save it as `.als`.
 

@@ -76,6 +76,7 @@ gen.save("output.als")
 4. Pointee の名前空間(Pointee、AutomationTarget、ModulationTarget、ControllerTargets)の Id が重複しないこと。
 5. 一覧(Devices、Tracks、Events、WarpMarkers など)の要素が、すべて `Id` を持つこと。
 6. 宙に浮いた参照がないこと。GrooveId、PointeeId、経路の宛先が、すべてセットの中で見つかること。
+7. 装置のクラスが、文書が名乗る版(`MinorVersion`)にあること。その版より後に入ったクラス(Live 12.3 の文書に、Live 12.4 の新しい Erosion など)は `Unknown class` で開けません。
 
 検査に通ることは、Live での読み込みの確認ではありません。
 
@@ -94,6 +95,7 @@ Codex など別のエージェントでは、そのエージェントが読む�
 - 環境: macOS、Ableton Live 12.4.16 Suite、Python 3。
 - `scripts/build_als.py` で作ったセットは、Live 12.4.16 で開けました。確かめたのは構造が読み込めることです。音と、いくつかの値の意味(リバーブの wet、ディレイの同期、サイドチェインの効き、13/16 の表示のされ方)は、Live の画面で確かめていません。そうした項目は `references/` に「not verified(未確認)」と印が付いています。`examples/make_example.py` が作る 2 つの例のセットは、検査には通りますが、それ自体はまだ Live で開いていません。
 - Live で開くのは、人が行う手順です。壊れたセットは「corrupt」のダイアログが出るだけでなく、Live ごと落ちることがあります。生成したセットを開く前に、いまのセットを保存してください。
+- セットは、Live 12.3 の文書(`MinorVersion="12.0_12300"`)として書きます。Live 12.4 で入った装置のクラス(新しい Erosion = `Erosion2`)は置けません。`references/native-devices.md` の「Versions and classes」を見てください。
 - プラグイン(VST/AU)のデバイスは、手で保存した型が必要です。`references/plugin-devices.md` を見てください。
 
 ## ライセンス

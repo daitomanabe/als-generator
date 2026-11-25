@@ -76,6 +76,7 @@ A set is not delivered unless these pass (details in `references/qa-gates.md`; `
 4. Ids in the Pointee namespace (Pointee, AutomationTarget, ModulationTarget, ControllerTargets) are unique.
 5. Every member of every list (Devices, Tracks, Events, WarpMarkers, ...) has an `Id`.
 6. No dangling references: GrooveId, PointeeId and routing targets all resolve inside the set.
+7. Every device class exists at the version the document declares (`MinorVersion`): a class that entered Live later, such as the Erosion of Live 12.4 in a 12.3 document, gives `Unknown class`.
 
 Passing them is not a Live readback.
 
@@ -94,6 +95,7 @@ For Codex or another agent, clone it into the skills folder that agent reads. `S
 - Environment: macOS, Ableton Live 12.4.16 Suite, Python 3.
 - Sets built with `scripts/build_als.py` opened in Live 12.4.16. That the structure loads was confirmed; the sound and the meaning of some values (Reverb wet, Delay sync, sidechain effect, how a 13/16 signature is displayed) were not checked on Live's screen. Such items are marked "not verified" in `references/`. The two example sets from `examples/make_example.py` pass the checker but have not themselves been opened in Live.
 - Opening in Live is a manual step. A malformed set can crash Live itself, not just show a "corrupt" dialog, so save your current set before opening a generated one.
+- Sets are written as Live 12.3 documents (`MinorVersion="12.0_12300"`). A device class that entered Live with 12.4 (the new Erosion, class `Erosion2`) cannot be placed in them; see `references/native-devices.md`, "Versions and classes".
 - Plugin (VST/AU) devices need a template saved by hand; see `references/plugin-devices.md`.
 
 ## License

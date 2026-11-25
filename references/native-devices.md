@@ -35,7 +35,31 @@ def renumber(dev, aid):
 ```
 
 Paths from Ableton's build machine inside `LastPresetRef` are harmless. Leave them.
-A MinorVersion mismatch (12402 -> 12300) is also fine.
+A MinorVersion mismatch (a 12402 .adv in a 12300 ALS) is fine **only when the device's class exists in a 12300 document** (see "Versions and classes" below).
+A class that entered Live in a newer version, placed in a document of an older version, makes Live refuse the set.
+
+## Versions and classes (2026-11-25; this happened)
+
+- The `MinorVersion` in the document header names the Live that wrote the document: **`12.0_12300` = Live 12.3.x, `12.0_12402` = Live 12.4.x**
+  (checked on sets saved by those versions; the Core Library's .adv presets and bundled sets of Live 12.4 say `12.0_12402`, `Creator="Ableton Live 12.4d1"`).
+- Live only reads the classes that exist at the document's version. A device class inside `<Devices>` that entered Live later than that gives:
+  `The document "...als" is corrupt and cannot be loaded. (Unknown class 'Erosion2' encountered (at line L, column C))`
+  - 2026-11-25: a set written as `12.0_12300` with a Core Library preset of Erosion (class `Erosion2`) was refused by Live 12.4.16.
+    Erosion was replaced by a new device in Live 12.4 (release notes: "Sets created prior to 12.4 that include Erosion will load the previous version
+    of the device, which is now named Erosion Legacy"). What a 12.3 document can hold is a preset from `Legacy/Erosion Legacy/` (class `Erosion`).
+  - The class name cannot be derived from the device name (`Auto Filter` -> `AutoFilter2`, `Phaser-Flanger` -> `PhaserNew`, `Spectral Resonator` -> `Transmute`).
+    Open the .adv and read the tag of its first child.
+- **An unknown class (a list member) is fatal; unknown child elements inside a known class were skipped.** In the same set, 13 devices before Erosion2 were read,
+  among them Chorus-Ensemble (`Chorus2`), whose 12.4 preset carries parameters that 12.3 does not have. "A 12402 .adv opens in a 12300 set" is only about
+  devices whose class exists at 12300.
+- Live **stops at the first one and names only that one**. Whether the devices after it load cannot be told from that set.
+- What to do (stop it before embedding):
+  1. Keep a table, per device class, of whether it has loaded in a document of this version (states such as: opened and confirmed / only read past /
+     not yet tried / needs a newer document). Refuse classes that are missing from the table or need a newer document before writing. Put the
+     not-yet-tried ones only into probe sets.
+  2. Check it structurally as well (gate 7 of `scripts/check_als.py`; add classes whose version you learn to `CLASS_MIN_MINOR`).
+  3. Raising the document's version (writing `12.0_12402`) is separate work: confirm that every other part of the document has that version's shape by
+     comparing with sets saved by Live, and open a probe set first. Do not just rewrite the number in the header.
 
 ## Sidechain routing (Compressor2)
 

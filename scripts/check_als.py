@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# QA pair of build_als.py (see its header). Without score.json it runs only the structural gates 1-6 (references/qa-gates.md);
+# QA pair of build_als.py (see its header). Without score.json it runs only the structural gates 1-7 (references/qa-gates.md);
 # with it, also the checks that match build_als.py's output.
 # Structure only: a PASS is not a Live readback. The roles and return layout it expects are the ones in build_als.py: adjust together.
 """Structural QA for a generated .als (not a Live readback).
 
     python3 scripts/check_als.py <set.als> [score.json]
 
-Gates 1-6 of the als-generator skill (gzip, XML, NextPointeeId, Pointee namespace, list-member Ids, dangling refs) plus, with a score.json,
+Gates 1-7 of the als-generator skill (gzip, XML, NextPointeeId, Pointee namespace, list-member Ids, dangling refs, device classes vs the
+document's version) plus, with a score.json,
 tempo / tracks / clips / positions / overlaps / sample refs / returns / master / sidechain / locators. Prints PASS/FAIL per item; exit 1 on any FAIL.
 """
 from __future__ import annotations
@@ -22,6 +23,10 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parent.parent
 LIST_STRICT = ("Devices", "Tracks", "Envelopes", "Events", "ClipSlotList", "Scenes", "WarpMarkers", "TimeSignatures", "Sends", "SendsPre")
 results: list[tuple[bool, str]] = []
+# Device classes that entered Live after 12.0: the oldest document MinorVersion that knows them. A class in a document older than that is fatal:
+# "corrupt and cannot be loaded. (Unknown class 'Erosion2' encountered ...)" (2026-11-25, Live 12.4.16, a 12.0_12300 document).
+# 12.0_12300 = documents of Live 12.3.x, 12.0_12402 = Live 12.4.x. Add a class here when a release note or a refused set shows its version.
+CLASS_MIN_MINOR = {"Erosion2": "12.0_12402"}
 
 
 def ok(cond, msg):
@@ -54,6 +59,15 @@ def wav_frames(b: bytes):
             return min(size, len(b) - body) // (fmt[1] * fmt[5] // 8), fmt[2]
         pos = body + size + (size & 1)
     raise ValueError("no data chunk")
+
+
+def minor_key(v: str):
+    """ "12.0_12402" -> (12, 0, 12402); "" -> () (sorts below everything)."""
+    try:
+        head, build = v.split("_")
+        return tuple(int(x) for x in head.split(".")) + (int(build),)
+    except ValueError:
+        return ()
 
 
 def val(e, path):
@@ -121,6 +135,12 @@ def main():
     ok(not bad_t, f"6d routing Track.N refs exist ({len(bad_t)} dangling)")
     scenes = len(ls.findall("Scenes/Scene"))
     ok(all(len(t.find("DeviceChain/MainSequencer/ClipSlotList")) == scenes for t in audio), f"6e clip slots per track == scenes ({scenes})")
+
+    # 7 device classes exist in the document's declared version (references/qa-gates.md gate 7)
+    doc_minor = root.get("MinorVersion", "")
+    newer = sorted({k.tag for d in root.iter("Devices") for k in d if minor_key(CLASS_MIN_MINOR.get(k.tag, "")) > minor_key(doc_minor)})
+    ok(not newer, f"7 device classes exist at the document's version {doc_minor} ({len(newer)} too new: "
+                  + ", ".join(f"{t} needs {CLASS_MIN_MINOR[t]}" for t in newer) + ")")
 
     # clips: refs exist, size/CRC match
     base = als.parent
